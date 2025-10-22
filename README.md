@@ -23,27 +23,35 @@ This is a modern, scalable backend API for a freight marketplace platform built 
 
 ## Getting Started
 
-### 1. Clone the repository
+### Prerequisites
+
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later
+- Code editor (Visual Studio 2022, VS Code, or Rider)
+- (Optional) [Docker](https://www.docker.com/get-started) for containerized deployment
+
+### Option 1: Run Locally with .NET
+
+#### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Mbugus2008/freight-backend.git
 cd freight-backend
 ```
 
-### 2. Restore dependencies
+#### 2. Restore dependencies
 
 ```bash
 cd FreightBackend
 dotnet restore
 ```
 
-### 3. Build the project
+#### 3. Build the project
 
 ```bash
 dotnet build
 ```
 
-### 4. Run the application
+#### 4. Run the application
 
 ```bash
 dotnet run
@@ -53,6 +61,48 @@ The API will be available at:
 - HTTP: `http://localhost:5262`
 - HTTPS: `https://localhost:7135`
 - Swagger UI: `http://localhost:5262` (in Development mode)
+
+### Option 2: Run with Docker
+
+#### 1. Clone the repository
+
+```bash
+git clone https://github.com/Mbugus2008/freight-backend.git
+cd freight-backend
+```
+
+#### 2. Build and run with Docker Compose
+
+```bash
+docker-compose up -d
+```
+
+The API will be available at:
+- HTTP: `http://localhost:5262`
+- HTTPS: `https://localhost:7135`
+- Swagger UI: `http://localhost:5262` (in Development mode)
+
+#### 3. View logs
+
+```bash
+docker-compose logs -f
+```
+
+#### 4. Stop the containers
+
+```bash
+docker-compose down
+```
+
+### Option 3: Build Docker Image Manually
+
+```bash
+# Build the image
+docker build -t freight-backend:latest .
+
+# Run the container
+docker run -d -p 5262:8080 -p 7135:8081 --name freight-backend freight-backend:latest
+```
 
 ## Project Structure
 
@@ -105,11 +155,85 @@ dotnet publish -c Release -o ./publish
 
 ## Testing
 
-To run tests (when test project is added):
+### Running Tests
+
+To run all tests in the solution:
 
 ```bash
 dotnet test
 ```
+
+To run tests with detailed output:
+
+```bash
+dotnet test --verbosity normal
+```
+
+To run tests with code coverage:
+
+```bash
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+### Test Structure
+
+The project uses:
+- **xUnit** - Testing framework
+- **Moq** - Mocking library for unit tests
+- **FluentAssertions** - Fluent assertion library for readable tests
+
+Tests are organized by component:
+- `FreightBackend.Tests/Services/` - Service layer tests
+- `FreightBackend.Tests/Controllers/` - Controller tests (to be added)
+
+## Development
+
+### Running in Development Mode
+
+```bash
+dotnet run --environment Development
+```
+
+### Building for Production
+
+```bash
+dotnet publish -c Release -o ./publish
+```
+
+### Running Tests in Watch Mode
+
+```bash
+dotnet watch test
+```
+
+## Deployment
+
+### Docker Deployment
+
+The application includes Docker support for easy deployment:
+
+1. **Build the Docker image:**
+   ```bash
+   docker build -t freight-backend:latest .
+   ```
+
+2. **Run the container:**
+   ```bash
+   docker run -d -p 8080:8080 -p 8081:8081 freight-backend:latest
+   ```
+
+3. **Or use Docker Compose:**
+   ```bash
+   docker-compose up -d
+   ```
+
+### Environment Variables
+
+Configure the application using environment variables:
+
+- `ASPNETCORE_ENVIRONMENT` - Set to `Development`, `Staging`, or `Production`
+- `ASPNETCORE_URLS` - Configure the URLs the app listens on
+- Additional configuration can be added to `appsettings.json`
 
 ## API Documentation
 
@@ -117,6 +241,9 @@ When running in Development mode, Swagger UI is available at the root URL (`http
 - Interactive API documentation
 - Endpoint testing capabilities
 - Request/response schemas
+
+You can also access the OpenAPI specification at:
+- JSON: `http://localhost:5262/swagger/v1/swagger.json`
 
 ## Architecture
 
