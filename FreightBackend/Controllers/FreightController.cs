@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using FreightBackend.DTOs;
+using FreightBackend.Services;
 
 namespace FreightBackend.Controllers;
 
@@ -10,10 +12,14 @@ namespace FreightBackend.Controllers;
 [Produces("application/json")]
 public class FreightController : ControllerBase
 {
+    private readonly IFreightService _freightService;
     private readonly ILogger<FreightController> _logger;
 
-    public FreightController(ILogger<FreightController> logger)
+    public FreightController(
+        IFreightService freightService,
+        ILogger<FreightController> logger)
     {
+        _freightService = freightService;
         _logger = logger;
     }
 
@@ -21,18 +27,14 @@ public class FreightController : ControllerBase
     /// Get all freight listings
     /// </summary>
     /// <returns>List of freight items</returns>
+    /// <response code="200">Returns the list of freight items</response>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<object>> GetAll()
+    [ProducesResponseType(typeof(IEnumerable<FreightDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<FreightDto>>> GetAll()
     {
         _logger.LogInformation("Fetching all freight listings");
-        
-        // TODO: Implement actual data retrieval
-        return Ok(new[] 
-        { 
-            new { Id = 1, Description = "Sample Freight 1", Status = "Available" },
-            new { Id = 2, Description = "Sample Freight 2", Status = "In Transit" }
-        });
+        var freights = await _freightService.GetAllAsync();
+        return Ok(freights);
     }
 
     /// <summary>
@@ -40,55 +42,71 @@ public class FreightController : ControllerBase
     /// </summary>
     /// <param name="id">Freight ID</param>
     /// <returns>Freight item details</returns>
+    /// <response code="200">Returns the freight item</response>
+    /// <response code="404">Freight item not found</response>
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(FreightDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<object> GetById(int id)
+    public async Task<ActionResult<FreightDto>> GetById(int id)
     {
         _logger.LogInformation("Fetching freight with ID: {FreightId}", id);
         
-        // TODO: Implement actual data retrieval
-        if (id <= 0)
+        var freight = await _freightService.GetByIdAsync(id);
+        if (freight == null)
         {
             return NotFound(new { Message = $"Freight with ID {id} not found" });
         }
         
-        return Ok(new { Id = id, Description = $"Freight {id}", Status = "Available" });
+        return Ok(freight);
     }
 
     /// <summary>
     /// Create a new freight listing
     /// </summary>
-    /// <param name="freight">Freight details</param>
+    /// <param name="createDto">Freight details</param>
     /// <returns>Created freight item</returns>
+    /// <response code="201">Freight item created successfully</response>
+    /// <response code="400">Invalid input data</response>
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(FreightDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<object> Create([FromBody] object freight)
+    public async Task<ActionResult<FreightDto>> Create([FromBody] CreateFreightDto createDto)
     {
         _logger.LogInformation("Creating new freight listing");
         
-        // TODO: Implement validation and data persistence
-        var newFreight = new { Id = 3, Description = "New Freight", Status = "Available" };
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
         
-        return CreatedAtAction(nameof(GetById), new { id = 3 }, newFreight);
+        var freight = await _freightService.CreateAsync(createDto);
+        return CreatedAtAction(nameof(GetById), new { id = freight.Id }, freight);
     }
 
     /// <summary>
     /// Update an existing freight listing
     /// </summary>
     /// <param name="id">Freight ID</param>
-    /// <param name="freight">Updated freight details</param>
+    /// <param name="updateDto">Updated freight details</param>
     /// <returns>No content on success</returns>
+    /// <response code="204">Freight item updated successfully</response>
+    /// <response code="400">Invalid input data</response>
+    /// <response code="404">Freight item not found</response>
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult Update(int id, [FromBody] object freight)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateFreightDto updateDto)
     {
         _logger.LogInformation("Updating freight with ID: {FreightId}", id);
         
-        // TODO: Implement actual data update
-        if (id <= 0)
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
+        var result = await _freightService.UpdateAsync(id, updateDto);
+        if (!result)
         {
             return NotFound(new { Message = $"Freight with ID {id} not found" });
         }
@@ -101,15 +119,17 @@ public class FreightController : ControllerBase
     /// </summary>
     /// <param name="id">Freight ID</param>
     /// <returns>No content on success</returns>
+    /// <response code="204">Freight item deleted successfully</response>
+    /// <response code="404">Freight item not found</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
         _logger.LogInformation("Deleting freight with ID: {FreightId}", id);
         
-        // TODO: Implement actual data deletion
-        if (id <= 0)
+        var result = await _freightService.DeleteAsync(id);
+        if (!result)
         {
             return NotFound(new { Message = $"Freight with ID {id} not found" });
         }

@@ -1,4 +1,5 @@
 using FreightBackend.Middleware;
+using FreightBackend.Services;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Register application services
+builder.Services.AddSingleton<IFreightService, FreightService>();
 
 // Configure Swagger/OpenAPI
 builder.Services.AddSwaggerGen(c =>
